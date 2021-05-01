@@ -1,0 +1,330 @@
+C51 COMPILER V9.57.0.0   ________________                                                  04/29/2021 23:49:49 PAGE 1   
+
+
+C51 COMPILER V9.57.0.0, COMPILATION OF MODULE ________________
+OBJECT MODULE PLACED IN .\Objects\蓝牙控制舵机测试.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE 蓝牙控制舵机测试.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\L
+                    -istings\蓝牙控制舵机测试.lst) OBJECT(.\Objects\蓝牙控制舵机测试.obj)
+
+line level    source
+
+   1          #include<reg52.h>
+   2          #define uchar unsigned char
+   3          #define uint unsigned int
+   4          /*位定义*/
+   5          //前轮
+   6          sbit left_go=P1^2;
+   7          sbit left_back=P1^3;
+   8          sbit right_go=P1^0;
+   9          sbit right_back=P1^1;
+  10          //后轮
+  11          sbit left_go2=P1^6;
+  12          sbit left_back2=P1^7;
+  13          sbit right_go2=P1^4;
+  14          sbit right_back2=P1^5;
+  15          //车轮控制使能段
+  16          sbit ENA1=P2^0;
+  17          sbit ENB1=P2^3;
+  18          sbit ENA2=P2^0;
+  19          sbit ENB2=P2^3;
+  20          //PWM输出(控制舵机)
+  21          sbit pwm1 =P3^3;
+  22          sbit pwm2 =P3^4;
+  23          sbit pwm3 =P3^5;
+  24          sbit pwm4 =P3^6;
+  25          uchar temp;             //temp储存蓝牙串口收到的信息
+  26          uchar count,num1;      //0.5ms次数标识
+  27          uchar jd1,jd2;         //舵机角度标识
+  28          void delay(uint z);    //声明延时函数
+  29          void BlueteethInit();  //声明蓝牙初始化
+  30          void init();           //声明车状态初始化
+  31          //声明车的前进、后退、左右转函数
+  32          void go();
+  33          void back();
+  34          void left();
+  35          void right();
+  36          void stop();
+  37          
+  38          //主函数
+  39          void main()
+  40          {
+  41   1              jd1=0;
+  42   1              jd2=0;
+  43   1              count=0;
+  44   1              init();
+  45   1              BlueteethInit();
+  46   1        while(1)
+  47   1              {
+  48   2                              switch(temp)
+  49   2                              {
+  50   3                         
+  51   3                                              case 0x01: go(); break;
+  52   3                                              case 0x02: back(); break;
+  53   3                                              case 0x03: left(); break;
+  54   3                                              case 0x04: right(); break;
+C51 COMPILER V9.57.0.0   ________________                                                  04/29/2021 23:49:49 PAGE 2   
+
+  55   3                                              case 0x00: stop(); break;   
+  56   3      //爪子舵机
+  57   3                                              case 0x05:                                            
+  58   3                                                              jd1++;
+  59   3                                                              count=0;
+  60   3                                                              temp=0;
+  61   3                                                              if(jd1==15)
+  62   3                                                               jd2=3;                       
+  63   3                                                              if(jd1==18)
+  64   3                                                                      {
+  65   4                                                                              jd1=17;
+  66   4                                                                              delay(200);
+  67   4                                                                              jd2=15;                          
+  68   4                                                                      }
+  69   3                                                                      break;
+  70   3                                              case 0x06:                                            
+  71   3                                                              temp=0;
+  72   3                                                              jd1--;
+  73   3                                                              count=0;
+  74   3                                                              if(jd1==0)
+  75   3                                                                              jd1=1; break; 
+  76   3      //上升舵机
+  77   3                          case 0x07:                                   
+  78   3                                                              jd2++;
+  79   3                                                              count=0;
+  80   3                                                              temp=0;
+  81   3                                                              if(jd2==6)
+  82   3                                                                               jd2=5; break;
+  83   3                                              case 0x08:        
+  84   3                                                              temp=0;
+  85   3                                                              jd2--;
+  86   3                                                              count=0;
+  87   3                                                              if(jd2==0)
+  88   3                                                                              jd2=1; break;           
+  89   3                      }
+  90   2              }
+  91   1      }
+  92          /*延时函数*/
+  93          void delay(uint z)        
+  94          {
+  95   1              uint x,y;
+  96   1              for(x=z;x>0;x--)
+  97   1                      for(y=110;y>0;y--);
+  98   1      }
+  99          /*蓝牙中断初始化（定时器1）*/
+ 100          void BlueteethInit()        
+ 101          {
+ 102   1              TMOD= 0x21;        //T1工作模式为2，自动重装
+ 103   1              TH1 = 0xfd;        //设置波特率为9600
+ 104   1              TL1 = 0xfd;
+ 105   1              TH0= 0xff;         //0.5ms
+ 106   1              TL0=0x8c;            //0.25ms         //0.125ms
+ 107   1              ET0=1;               
+ 108   1              TR0=1;
+ 109   1              TR1= 1;      
+ 110   1              REN= 1;
+ 111   1              SM0= 0;
+ 112   1              SM1= 1;   
+ 113   1              ES= 1;         //串口中断允许位
+ 114   1              EA=1;         //终端控制允许
+ 115   1      }
+ 116          
+C51 COMPILER V9.57.0.0   ________________                                                  04/29/2021 23:49:49 PAGE 3   
+
+ 117          /*车状态初始化*/
+ 118          void init()
+ 119          {
+ 120   1              right_back=0;
+ 121   1              left_go=0;
+ 122   1              left_back=0;
+ 123   1              right_go=0;
+ 124   1      
+ 125   1              right_back2=0;
+ 126   1              left_go2=0;
+ 127   1              left_back2=0;
+ 128   1              right_go2=0;
+ 129   1      //        jd1=1;
+ 130   1      //   jd2=1;         
+ 131   1      //        num=0;
+ 132   1      }
+ 133          /*前进*/
+ 134          void go()
+ 135          {
+ 136   1              ENA1=1;
+ 137   1              ENB1=1;
+ 138   1              ENA2=1;
+ 139   1              ENB2=1;
+ 140   1              
+ 141   1      //      left_go=1;
+ 142   1      //      left_back=0;
+ 143   1      //      right_go=1;
+ 144   1      //      right_back=0;
+ 145   1      
+ 146   1      //      left_go2=1;
+ 147   1      //      left_back2=0;
+ 148   1      //      right_go2=1;
+ 149   1      //      right_back2=0; 
+ 150   1      
+ 151   1      //test  
+ 152   1              left_go=0;
+ 153   1              left_back=0;
+ 154   1              right_go=0;
+ 155   1              right_back=0;
+ 156   1      
+ 157   1              left_go2=0;
+ 158   1              left_back2=0;
+ 159   1              right_go2=0;
+ 160   1              right_back2=0;  
+ 161   1      }
+ 162          /*后退*/
+ 163          void back()
+ 164          {
+ 165   1              ENA1=1;
+ 166   1              ENB1=1;
+ 167   1              ENA2=1;
+ 168   1              ENB2=1;
+ 169   1              
+ 170   1              left_go=0;
+ 171   1      //      left_back=1;
+ 172   1      //      right_go=0;
+ 173   1      //      right_back=1;
+ 174   1      
+ 175   1      //      left_go2=0;
+ 176   1      //      left_back2=1;
+ 177   1      //      right_go2=0;
+ 178   1      //      right_back2=1; 
+C51 COMPILER V9.57.0.0   ________________                                                  04/29/2021 23:49:49 PAGE 4   
+
+ 179   1      
+ 180   1      //test  
+ 181   1              left_go=0;
+ 182   1              left_back=0;
+ 183   1              right_go=0;
+ 184   1              right_back=0;
+ 185   1      
+ 186   1              left_go2=0;
+ 187   1              left_back2=0;
+ 188   1              right_go2=0;
+ 189   1              right_back2=0;  
+ 190   1      }
+ 191          /*左转*/
+ 192          void left()
+ 193          {
+ 194   1              ENA1=1;
+ 195   1              ENB1=1;
+ 196   1              ENA2=1;
+ 197   1              ENB2=1;
+ 198   1      
+ 199   1      //      left_go=0;
+ 200   1      //      left_back=1;
+ 201   1      //      right_go=1;
+ 202   1      //      right_back=0;
+ 203   1      
+ 204   1      //      left_go2=1;
+ 205   1      //      left_back2=0;
+ 206   1      //      right_go2=1;
+ 207   1      //      right_back2=0;
+ 208   1              
+ 209   1      //test  
+ 210   1              left_go=0;
+ 211   1              left_back=0;
+ 212   1              right_go=0;
+ 213   1              right_back=0;
+ 214   1      
+ 215   1              left_go2=0;
+ 216   1              left_back2=0;
+ 217   1              right_go2=0;
+ 218   1              right_back2=0;          
+ 219   1      }
+ 220          /*右转*/
+ 221          void right()
+ 222          {
+ 223   1              ENA1=1;
+ 224   1              ENB1=1;
+ 225   1              ENA2=1;
+ 226   1              ENB2=1;
+ 227   1              
+ 228   1      //      left_go=1;
+ 229   1      //      left_back=0;
+ 230   1      //      right_go=0;
+ 231   1      //      right_back=1;
+ 232   1      
+ 233   1      //      
+ 234   1      //      left_go2=1;
+ 235   1      //      left_back2=0;
+ 236   1      //      right_go2=1;
+ 237   1      //      right_back2=0;
+ 238   1              
+ 239   1      //test  
+ 240   1              left_go=0;
+C51 COMPILER V9.57.0.0   ________________                                                  04/29/2021 23:49:49 PAGE 5   
+
+ 241   1              left_back=0;
+ 242   1              right_go=0;
+ 243   1              right_back=0;
+ 244   1      
+ 245   1              left_go2=0;
+ 246   1              left_back2=0;
+ 247   1              right_go2=0;
+ 248   1              right_back2=0;
+ 249   1      }
+ 250          /*停止*/
+ 251          void stop()
+ 252          {   
+ 253   1              left_go=0;
+ 254   1              left_back=0;
+ 255   1              right_go=0;
+ 256   1              right_back=0;
+ 257   1      
+ 258   1              left_go2=0;
+ 259   1              left_back2=0;
+ 260   1              right_go2=0;
+ 261   1              right_back2=0;
+ 262   1      }
+ 263          /*定时器0工作方式1 16位定时计数（PWM）*/
+ 264          void time0() interrupt 1    
+ 265          {
+ 266   1              TH0  = 0xff;            
+ 267   1              TL0  = 0x8c;
+ 268   1      
+ 269   1          if(count<jd1)              //判断0.5ms次数是否小于角度标识
+ 270   1                      {
+ 271   2                        pwm1=1;                //确实小于，PWM输出高电平   
+ 272   2                      }               
+ 273   1              else
+ 274   1                      {
+ 275   2                        pwm1=0;                                 //大于则输出低电平
+ 276   2                      }
+ 277   1              if(count<jd2)
+ 278   1                  {
+ 279   2                        pwm2=1;
+ 280   2                  }
+ 281   1              else
+ 282   1                      {
+ 283   2                        pwm2=0;
+ 284   2                      }
+ 285   1                      
+ 286   1          count=(count+1);     //0.5ms次数加1      
+ 287   1          count=count%160;     //次数始终保持为40 即保持周期为20ms
+ 288   1                      
+ 289   1            
+ 290   1      }
+ 291          /*串口中断*/
+ 292          void Com_Int() interrupt 4
+ 293          {
+ 294   1              RI=0;       //读标志清零
+ 295   1              temp=SBUF;
+ 296   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    432    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+C51 COMPILER V9.57.0.0   ________________                                                  04/29/2021 23:49:49 PAGE 6   
+
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      5    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

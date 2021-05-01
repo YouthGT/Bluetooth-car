@@ -1,0 +1,3 @@
+".\Objects\蓝牙控制舵机测试.obj" 
+TO ".\Objects\蓝牙控制舵机" 
+PRINT(".\Listings\蓝牙控制舵机.m51") RAMSIZE(256) 

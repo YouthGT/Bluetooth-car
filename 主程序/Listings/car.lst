@@ -1,0 +1,361 @@
+C51 COMPILER V9.57.0.0   CAR                                                               04/29/2021 22:13:48 PAGE 1   
+
+
+C51 COMPILER V9.57.0.0, COMPILATION OF MODULE CAR
+OBJECT MODULE PLACED IN .\Objects\car.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE car.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\car.l
+                    -st) OBJECT(.\Objects\car.obj)
+
+line level    source
+
+   1          #include<reg52.h>
+   2          #define uchar unsigned char
+   3          #define uint unsigned int
+   4          /*位定义*/
+   5          //前轮
+   6          sbit left_go=P1^2;
+   7          sbit left_back=P1^3;
+   8          sbit right_go=P1^0;
+   9          sbit right_back=P1^1;
+  10          //后轮
+  11          sbit left_go2=P1^6;
+  12          sbit left_back2=P1^7;
+  13          sbit right_go2=P1^4;
+  14          sbit right_back2=P1^5;
+  15          //车轮控制使能段
+  16          sbit ENA1=P2^0;
+  17          sbit ENB1=P2^3;
+  18          sbit ENA2=P2^0;
+  19          sbit ENB2=P2^3;
+  20          //PWM输出(控制舵机)
+  21          sbit PWM1 =P3^3;
+  22          sbit PWM2 =P3^4;
+  23          
+  24          uchar temp;            //temp储存蓝牙串口收到的信息
+  25          uchar count;           //0.5ms次数标识
+  26          uchar jd1,jd2;         //舵机角度标识
+  27          void delay(uint z);    //声明延时函数
+  28          void BlueteethInit();  //声明蓝牙初始化
+  29          void init();           //声明车状态初始化
+  30          //声明车的前进、后退、左右转函数
+  31          void go();
+  32          void back();
+  33          void left();
+  34          void right();
+  35          void stop();
+  36          
+  37          /*void duoji1_up()
+  38          {
+  39                  jd1++;                 
+  40              num=0;              //按键按下 则20ms周期从新开始
+  41              if(jd1==6)
+  42                jd1=5;               //已经是180度，则保持       
+  43          }
+  44          void duoji1_dwon()
+  45          {
+  46                  jd1--;                 
+  47              num=0;
+  48              if(jd1==0)
+  49                jd1=1;               //已经是0度，则保持
+  50          }
+  51          void duoji2_up()
+  52          {
+  53                  jd2++;                 
+  54              num=0;              //按键按下 则20ms周期从新开始
+C51 COMPILER V9.57.0.0   CAR                                                               04/29/2021 22:13:48 PAGE 2   
+
+  55              if(jd2==6)
+  56                jd2=5;               //已经是180度，则保持       
+  57          }  
+  58          void duoji2_dwon()
+  59          {
+  60                  jd2--;                 
+  61              num=0;
+  62              if(jd2==0)
+  63               jd2=1;               //已经是0度，则保持
+  64          }         */
+  65          
+  66          
+  67          void main()
+  68          {
+  69   1              jd1=14;
+  70   1              jd2=6;
+  71   1              jd3=5;
+*** ERROR C202 IN LINE 71 OF car.c: 'jd3': undefined identifier
+  72   1              jd4=6;
+*** ERROR C202 IN LINE 72 OF car.c: 'jd4': undefined identifier
+  73   1              count=0;
+  74   1              init();
+  75   1              BlueteethInit();
+  76   1            while(1)
+  77   1              {
+  78   2                      switch(temp)
+  79   2                      {
+  80   3                     
+  81   3                              case 0x01: go(); break;
+  82   3                              case 0x02: back(); break;
+  83   3                              case 0x03: left(); break;
+  84   3                              case 0x04: right(); break;
+  85   3                              case 0x00: stop(); break;   
+  86   3      
+  87   3                              case 0x05:                                                    //爪子
+  88   3                                      jd1++;
+  89   3                                      count=0;
+  90   3                                      temp=0;
+  91   3                                      if(jd1==15)
+  92   3                                       jd2=3;                       
+  93   3                                      if(jd1==18)
+  94   3                                              {
+  95   4                                                                                              jd1=17;
+  96   4                                                                                              delay(200);
+  97   4                                                                                              jd2=15;                                       
+  98   4                                              }break;
+  99   3                              case 0x06:                                             //上升下降   
+ 100   3                                      temp=0;
+ 101   3                                      jd1--;
+ 102   3                                      count=0;
+ 103   3                                      if(jd1==0)
+ 104   3                                              jd1=1; break;
+ 105   3       /*                       case 0x07:                                   //支架
+ 106   3                                      jd2++;
+ 107   3                                      count=0;
+ 108   3                                      temp=0;
+ 109   3                                      if(jd2==6)
+ 110   3                                               jd2=5; break;
+ 111   3                              case 0x08:        
+ 112   3                                      temp=0;
+ 113   3                                      jd2--;
+ 114   3                                      count=0;
+C51 COMPILER V9.57.0.0   CAR                                                               04/29/2021 22:13:48 PAGE 3   
+
+ 115   3                                      if(jd2==0)
+ 116   3                                              jd2=1; break;
+ 117   3                              case 0x09:                                    //门
+ 118   3                                      jd3++;
+ 119   3                                      count=0;
+ 120   3                                      temp=0;
+ 121   3                                      if(jd3==21)
+ 122   3                                      　　　　　jd3=20; break;
+ 123   3                              case 0x10:        
+ 124   3                                      temp=0;
+ 125   3                                      jd3--;
+ 126   3                                      count=0;
+ 127   3                                      if(jd3==0)
+ 128   3                                              jd3=1; break;   
+ 129   3      */
+ 130   3                      }
+ 131   2      
+ 132   2      
+ 133   2              }
+ 134   1      }
+ 135          
+ 136          void delay(uint z)         //延时函数
+ 137          {
+ 138   1              uint x,y;
+ 139   1              for(x=z;x>0;x--)
+ 140   1                      for(y=110;y>0;y--);
+ 141   1      }
+ 142          
+ 143          void BlueteethInit()        //蓝牙中断初始化（定时器1）
+ 144          {
+ 145   1              TMOD= 0x21;        //T1工作模式为2，自动重装
+ 146   1              TH1 = 0xfd;        //设置波特率为9600
+ 147   1              TL1 = 0xfd;
+ 148   1              TH0= 0xff;         //0.5ms
+ 149   1              TL0=0x8c;            //0.25ms         //0.125ms
+ 150   1              ET0=1;               
+ 151   1              TR0=1;
+ 152   1              TR1= 1;      
+ 153   1              REN= 1;
+ 154   1              SM0= 0;
+ 155   1              SM1= 1;   
+ 156   1              ES= 1;         //串口中断允许位
+ 157   1              EA=1;         //终端控制允许
+ 158   1      }
+ 159          
+ 160          
+ 161          void init()//车状态初始化
+ 162          {
+ 163   1              right_back=0;
+ 164   1              left_go=0;
+ 165   1              left_back=0;
+ 166   1              right_go=0;
+ 167   1      
+ 168   1              right_back2=0;
+ 169   1              left_go2=0;
+ 170   1              left_back2=0;
+ 171   1              right_go2=0;
+ 172   1      //        jd1=1;
+ 173   1      //   jd2=1;         
+ 174   1      //        num=0;
+ 175   1      }
+ 176          void go()
+C51 COMPILER V9.57.0.0   CAR                                                               04/29/2021 22:13:48 PAGE 4   
+
+ 177          {
+ 178   1              ENA1=1;
+ 179   1              ENB1=1;
+ 180   1              ENA2=1;
+ 181   1              ENB2=1;
+ 182   1              
+ 183   1              left_go=1;
+ 184   1              left_back=0;
+ 185   1              right_go=1;
+ 186   1              right_back=0;
+ 187   1      
+ 188   1              left_go2=1;
+ 189   1              left_back2=0;
+ 190   1              right_go2=1;
+ 191   1              right_back2=0; 
+ 192   1      
+ 193   1      //test  
+ 194   1      //      left_go=0;
+ 195   1      //      left_back=0;
+ 196   1      //      right_go=0;
+ 197   1      //      right_back=0;
+ 198   1      
+ 199   1      //      left_go2=0;
+ 200   1      //      left_back2=0;
+ 201   1      //      right_go2=0;
+ 202   1      //      right_back2=0;  
+ 203   1      }
+ 204          
+ 205          void back()
+ 206          {
+ 207   1              ENA1=1;
+ 208   1              ENB1=1;
+ 209   1              ENA2=1;
+ 210   1              ENB2=1;
+ 211   1              
+ 212   1              left_go=0;
+ 213   1              left_back=1;
+ 214   1              right_go=0;
+ 215   1              right_back=1;
+ 216   1      
+ 217   1              left_go2=0;
+ 218   1              left_back2=1;
+ 219   1              right_go2=0;
+ 220   1              right_back2=1; 
+ 221   1      
+ 222   1      //test  
+ 223   1      //      left_go=0;
+ 224   1      //      left_back=0;
+ 225   1      //      right_go=0;
+ 226   1      //      right_back=0;
+ 227   1      
+ 228   1      //      left_go2=0;
+ 229   1      //      left_back2=0;
+ 230   1      //      right_go2=0;
+ 231   1      //      right_back2=0;  
+ 232   1      }
+ 233          
+ 234          void left()
+ 235          {
+ 236   1              ENA1=1;
+ 237   1              ENB1=1;
+ 238   1              ENA2=1;
+C51 COMPILER V9.57.0.0   CAR                                                               04/29/2021 22:13:48 PAGE 5   
+
+ 239   1              ENB2=1;
+ 240   1      
+ 241   1              left_go=0;
+ 242   1              left_back=1;
+ 243   1              right_go=1;
+ 244   1              right_back=0;
+ 245   1      
+ 246   1              left_go2=1;
+ 247   1              left_back2=0;
+ 248   1              right_go2=1;
+ 249   1              right_back2=0;
+ 250   1              
+ 251   1      //test  
+ 252   1      //      left_go=0;
+ 253   1      //      left_back=0;
+ 254   1      //      right_go=0;
+ 255   1      //      right_back=0;
+ 256   1      
+ 257   1      //      left_go2=0;
+ 258   1      //      left_back2=0;
+ 259   1      //      right_go2=0;
+ 260   1      //      right_back2=0;          
+ 261   1      }
+ 262          
+ 263          void right()
+ 264          {
+ 265   1              ENA1=1;
+ 266   1              ENB1=1;
+ 267   1              ENA2=1;
+ 268   1              ENB2=1;
+ 269   1              
+ 270   1              left_go=1;
+ 271   1              left_back=0;
+ 272   1              right_go=0;
+ 273   1              right_back=1;
+ 274   1      
+ 275   1              
+ 276   1              left_go2=1;
+ 277   1              left_back2=0;
+ 278   1              right_go2=1;
+ 279   1              right_back2=0;
+ 280   1              
+ 281   1      //test  
+ 282   1      //      left_go=0;
+ 283   1      //      left_back=0;
+ 284   1      //      right_go=0;
+ 285   1      //      right_back=0;
+ 286   1      
+ 287   1      //      left_go2=0;
+ 288   1      //      left_back2=0;
+ 289   1      //      right_go2=0;
+ 290   1      //      right_back2=0;
+ 291   1      }
+ 292          
+ 293          void stop()
+ 294          {   
+ 295   1              left_go=0;
+ 296   1              left_back=0;
+ 297   1              right_go=0;
+ 298   1              right_back=0;
+ 299   1      
+ 300   1              left_go2=0;
+C51 COMPILER V9.57.0.0   CAR                                                               04/29/2021 22:13:48 PAGE 6   
+
+ 301   1              left_back2=0;
+ 302   1              right_go2=0;
+ 303   1              right_back2=0;
+ 304   1      }
+ 305          void Timer0_Int() interrupt 1     //定时器0工作方式1 16位定时计数（PWM）
+ 306          {
+ 307   1              TH0  = 0xff;            
+ 308   1              TL0  = 0x8c;
+ 309   1      
+ 310   1          if(count<jd1)              //判断0.5ms次数是否小于角度标识
+ 311   1                      {
+ 312   2                        PWM1=1;                //确实小于，PWM输出高电平   
+ 313   2                      }               
+ 314   1              else
+ 315   1                      {
+ 316   2                        PWM1=0;                                 //大于则输出低电平
+ 317   2                      }
+ 318   1              if(count<jd2)
+ 319   1                  {
+ 320   2                        PWM2=1;
+ 321   2                  }
+ 322   1              else
+ 323   1                      {
+ 324   2                        PWM2=0;
+ 325   2                      }
+ 326   1                      
+ 327   1          count=(count+1);     //0.5ms次数加1      
+ 328   1          count=count%160;     //次数始终保持为40 即保持周期为20ms
+ 329   1                      
+ 330   1            
+ 331   1      }
+ 332          
+ 333          void Com_Init() interrupt 4
+ 334          {
+ 335   1              RI=0;       //读标志清零
+ 336   1              temp=SBUF;  //将接收到的数据给temp
+ 337   1      }
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  2 ERROR(S)
