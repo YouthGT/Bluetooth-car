@@ -365,9 +365,24 @@
           <GroupName>Source Group 1</GroupName>
           <Files>
             <File>
-              <FileName>car.c</FileName>
+              <FileName>main.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\car.c</FilePath>
+              <FilePath>.\main.c</FilePath>
+            </File>
+            <File>
+              <FileName>CarInit.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\CarInit.h</FilePath>
+            </File>
+            <File>
+              <FileName>Delay.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Delay.h</FilePath>
+            </File>
+            <File>
+              <FileName>BluetoothInit.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\BluetoothInit.h</FilePath>
             </File>
           </Files>
         </Group>

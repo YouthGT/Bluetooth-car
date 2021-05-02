@@ -1,0 +1,127 @@
+C51 COMPILER V9.57.0.0   MAIN                                                              05/02/2021 17:15:47 PAGE 1   
+
+
+C51 COMPILER V9.57.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\main
+                    -.lst) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include<reg52.h>
+   2          #include<CarInit.h>
+   3          #include<Delay.h>
+   4          #include<BluetoothInit.h>
+   5          #define uchar unsigned char
+   6          #define uint unsigned int
+   7          //PWM输出(控制舵机)
+   8          sbit PWM1 =P3^3;
+   9          sbit PWM2 =P3^4;
+  10          
+  11          uchar temp;            //temp储存蓝牙串口收到的信息
+  12          uchar count;           //0.5ms次数标识
+  13          uchar jd1,jd2;         //舵机角度标识
+  14          
+  15          void main()
+  16          {
+  17   1              jd1=14;
+  18   1              jd2=6;
+  19   1              count=0;
+  20   1              Init();
+  21   1              BluetoothInit();
+  22   1            while(1)
+  23   1              {
+  24   2                      switch(temp)
+  25   2                      {
+  26   3                     
+  27   3                              case 0x01: go(); break;
+  28   3                              case 0x02: back(); break;
+  29   3                              case 0x03: left(); break;
+  30   3                              case 0x04: right(); break;
+  31   3                              case 0x00: stop(); break;   
+  32   3      
+  33   3                              case 0x05:                                        
+  34   3                                      jd1++;
+  35   3                                      count=0;
+  36   3                                      temp=0;
+  37   3                                      if(jd1==15)
+  38   3                                       jd2=3;                       
+  39   3                                      if(jd1==18)
+  40   3                                              {
+  41   4                                                                                              jd1=17;
+  42   4                                                                                              delay(200);
+  43   4                                                                                              jd2=15;                           
+  44   4                                              }break;
+  45   3                              case 0x06:                                            
+  46   3                                      temp=0;
+  47   3                                      jd1--;
+  48   3                                      count=0;
+  49   3                                      if(jd1==0)
+  50   3                                              jd1=1; break;
+  51   3                              case 0x07:                                   //支架
+  52   3                                      jd2++;
+  53   3                                      count=0;
+  54   3                                      temp=0;
+C51 COMPILER V9.57.0.0   MAIN                                                              05/02/2021 17:15:47 PAGE 2   
+
+  55   3                                      if(jd2==6)
+  56   3                                               jd2=5; break;
+  57   3                              case 0x08:        
+  58   3                                      temp=0;
+  59   3                                      jd2--;
+  60   3                                      count=0;
+  61   3                                      if(jd2==0)
+  62   3                                              jd2=1; break;
+  63   3                      }
+  64   2      
+  65   2      
+  66   2              }
+  67   1      }
+  68          
+  69          void Timer0_Int() interrupt 1     //定时器0工作方式1 16位定时计数（PWM）
+  70          {
+  71   1              TH0  = 0xff;            
+  72   1              TL0  = 0x8c;
+  73   1      
+  74   1          if(count<jd1)              //判断0.5ms次数是否小于角度标识
+  75   1                      {
+  76   2                        PWM1=1;                //确实小于，PWM输出高电平   
+  77   2                      }               
+  78   1              else
+  79   1                      {
+  80   2                        PWM1=0;                                 //大于则输出低电平
+  81   2                      }
+  82   1              if(count<jd2)
+  83   1                  {
+  84   2                        PWM2=1;
+  85   2                  }
+  86   1              else
+  87   1                      {
+  88   2                        PWM2=0;
+  89   2                      }
+  90   1                      
+  91   1          count=(count+1);     //0.5ms次数加1      
+  92   1          count=count%160;     //次数始终保持为40 即保持周期为20ms
+  93   1                      
+  94   1            
+  95   1      }
+  96          
+  97          void Com_Init() interrupt 4
+  98          {
+  99   1              RI=0;       //读标志清零
+ 100   1              temp=SBUF;  //将接收到的数据给temp
+ 101   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    432    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      4    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
