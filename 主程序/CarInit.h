@@ -4,15 +4,15 @@ sbit ENB1=P2^3;
 sbit ENA2=P2^0;
 sbit ENB2=P2^3;
 //前轮
-sbit left_go=P1^2;
-sbit left_back=P1^3;
-sbit right_go=P1^0;
-sbit right_back=P1^1;
+sbit left_go=P1^0;
+sbit left_back=P1^1;
+sbit right_go=P1^2;
+sbit right_back=P1^3;
 //后轮
-sbit left_go2=P1^6;
-sbit left_back2=P1^7;
-sbit right_go2=P1^4;
-sbit right_back2=P1^5;
+sbit left_go2=P1^4;
+sbit left_back2=P1^5;
+sbit right_go2=P1^6;
+sbit right_back2=P1^7;
 //车状态初始化
 void Init()
 {

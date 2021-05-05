@@ -8,6 +8,7 @@
 sbit PWM1 =P3^3;
 sbit PWM2 =P3^4;
 
+
 uchar temp;            //temp储存蓝牙串口收到的信息
 uchar count;           //0.5ms次数标识
 uchar jd1,jd2;         //舵机角度标识
