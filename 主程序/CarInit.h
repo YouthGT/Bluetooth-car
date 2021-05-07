@@ -1,13 +1,14 @@
-//车轮控制使能段
-sbit ENA1=P2^0;
-sbit ENB1=P2^3;
-sbit ENA2=P2^0;
-sbit ENB2=P2^3;
+//车轮控制使能段(模块内已连接5V)
+//sbit ENA1=P2^0;
+//sbit ENB1=P2^3;
+//sbit ENA2=P2^0;
+//sbit ENB2=P2^3;
 //前轮
 sbit left_go=P1^0;
 sbit left_back=P1^1;
 sbit right_go=P1^2;
 sbit right_back=P1^3;
+
 //后轮
 sbit left_go2=P1^4;
 sbit left_back2=P1^5;
@@ -29,11 +30,7 @@ void Init()
 //前进
 void go()
 {
-	ENA1=1;
-	ENB1=1;
-	ENA2=1;
-	ENB2=1;
-	
+
 	left_go=1;
 	left_back=0;
 	right_go=1;
@@ -58,11 +55,7 @@ void go()
 //后退
 void back()
 {
-	ENA1=1;
-	ENB1=1;
-	ENA2=1;
-	ENB2=1;
-	
+
 	left_go=0;
 	left_back=1;
 	right_go=0;
@@ -87,11 +80,6 @@ void back()
 //左转
 void left()
 {
-	ENA1=1;
-	ENB1=1;
-	ENA2=1;
-	ENB2=1;
-
 	left_go=0;
 	left_back=1;
 	right_go=1;
@@ -116,10 +104,6 @@ void left()
 //右转
 void right()
 {
-	ENA1=1;
-	ENB1=1;
-	ENA2=1;
-	ENB2=1;
 	
 	left_go=1;
 	left_back=0;
