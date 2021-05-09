@@ -1,4 +1,4 @@
-C51 COMPILER V9.57.0.0   MAIN                                                              05/07/2021 23:11:08 PAGE 1   
+C51 COMPILER V9.57.0.0   MAIN                                                              05/09/2021 13:06:39 PAGE 1   
 
 
 C51 COMPILER V9.57.0.0, COMPILATION OF MODULE MAIN
@@ -20,102 +20,98 @@ line level    source
   10          
   11          
   12          uchar temp;            //temp储存蓝牙串口收到的信息
-  13          uchar count;           //0.5ms次数标识
+  13          uchar count;           //0.125ms次数标识（分成20份）
   14          uchar jd1,jd2;         //舵机角度标识
   15          
   16          void main()
   17          {
-  18   1              jd1=14;
-  19   1              jd2=6;
+  18   1              jd1=0;
+  19   1              jd2=0;
   20   1              count=0;
   21   1              Init();
   22   1              BluetoothInit();
-  23   1            while(1)
-  24   1              {
+  23   1           while(1)
+  24   1             {
   25   2                      switch(temp)
-  26   2                      {
-  27   3                     
-  28   3                              case 0x01: go(); break;
-  29   3                              case 0x02: back(); break;
-  30   3                              case 0x03: left(); break;
-  31   3                              case 0x04: right(); break;
-  32   3                              case 0x00: stop(); break;   
-  33   3      
-  34   3                              case 0x05:                                        
-  35   3                                      jd1++;
-  36   3                                      count=0;
-  37   3                                      temp=0;
-  38   3                                      if(jd1==15)
-  39   3                                       jd2=3;                       
-  40   3                                      if(jd1==18)
-  41   3                                              {
-  42   4                                                                                              jd1=17;
-  43   4                                                                                              delay(200);
-  44   4                                                                                              jd2=15;                           
-  45   4                                              }break;
-  46   3                              case 0x06:                                            
-  47   3                                      temp=0;
-  48   3                                      jd1--;
-  49   3                                      count=0;
-  50   3                                      if(jd1==0)
-  51   3                                              jd1=1; break;
-  52   3                              case 0x07:                                   //支架
-  53   3                                      jd2++;
-  54   3                                      count=0;
-C51 COMPILER V9.57.0.0   MAIN                                                              05/07/2021 23:11:08 PAGE 2   
+  26   2                              {
+  27   3                                              case 0x00: stop(); break; 
+  28   3                                              case 0x01: go(); break;
+  29   3                                              case 0x02: back(); break;
+  30   3                                              case 0x03: left(); break;
+  31   3                                              case 0x04: right(); break;  
+  32   3                                              case 0x05:                              //支架
+  33   3                                                          temp=0;
+  34   3                                                              jd1+=5;
+  35   3                                                              count=0;
+  36   3                                                              if(jd1==20)
+  37   3                                                                      {
+  38   4                                                                              delay(200);
+  39   4                                                                              jd1=19;
+  40   4                                                                      }                                                                       
+  41   3                                   break;
+  42   3                                              case 0x06:                                            
+  43   3                                                              temp=0;
+  44   3                                                              jd1-=5;
+  45   3                                                              count=0;
+  46   3                                                              if(jd1==0)
+  47   3                                                                              jd1=1; break;
+  48   3                                              case 0x07:                           //爪子             
+  49   3                                                              jd2++;
+  50   3                                                              count=0;
+  51   3                                                              temp=0;
+  52   3                                                              if(jd2==6)
+  53   3                                                                               jd2=5; break;
+  54   3                                              case 0x08:        
+C51 COMPILER V9.57.0.0   MAIN                                                              05/09/2021 13:06:39 PAGE 2   
 
-  55   3                                      temp=0;
-  56   3                                      if(jd2==6)
-  57   3                                               jd2=5; break;
-  58   3                              case 0x08:        
-  59   3                                      temp=0;
-  60   3                                      jd2--;
-  61   3                                      count=0;
-  62   3                                      if(jd2==0)
-  63   3                                              jd2=1; break;
-  64   3                      }
-  65   2      
-  66   2      
-  67   2              }
-  68   1      }
-  69          
-  70          void Timer0_Int() interrupt 1     //定时器0工作方式1 16位定时计数（PWM）
-  71          {
-  72   1              TH0  = 0xff;            
-  73   1              TL0  = 0x8c;
-  74   1      
-  75   1          if(count<jd1)              //判断0.5ms次数是否小于角度标识
+  55   3                                                              temp=0;
+  56   3                                                              jd2--;
+  57   3                                                              count=0;
+  58   3                                                              if(jd2==0)
+  59   3                                                                              jd2=1; break;
+  60   3                              }
+  61   2      
+  62   2      
+  63   2            }
+  64   1      }
+  65          
+  66          void Timer0_Int() interrupt 1    //定时器0工作方式1 16位定时计数（PWM）
+  67          {
+  68   1              TH0  = 0xff;            
+  69   1              TL0  = 0x8c;             //0.125ms产生一次中断
+  70   1      
+  71   1          if(count<jd1)                //判断0.125ms次数是否小于角度标识
+  72   1                      {
+  73   2                        PWM1=1;                //确实小于，PWM输出高电平   
+  74   2                      }               
+  75   1              else
   76   1                      {
-  77   2                        PWM1=1;                //确实小于，PWM输出高电平   
-  78   2                      }               
-  79   1              else
-  80   1                      {
-  81   2                        PWM1=0;                                 //大于则输出低电平
-  82   2                      }
-  83   1              if(count<jd2)
-  84   1                  {
-  85   2                        PWM2=1;
-  86   2                  }
-  87   1              else
-  88   1                      {
-  89   2                        PWM2=0;
-  90   2                      }
-  91   1                      
-  92   1          count=(count+1);     //0.5ms次数加1      
-  93   1          count=count%160;     //次数始终保持为40 即保持周期为20ms
-  94   1                      
-  95   1            
-  96   1      }
-  97          
-  98          void Com_Init() interrupt 4
-  99          {
- 100   1              RI=0;       //读标志清零
- 101   1              temp=SBUF;  //将接收到的数据给temp
- 102   1      }
+  77   2                        PWM1=0;                //大于则输出低电平
+  78   2                      }
+  79   1              if(count<jd2)
+  80   1                  {
+  81   2                        PWM2=1;
+  82   2                  }
+  83   1              else
+  84   1                      {
+  85   2                        PWM2=0;
+  86   2                      }
+  87   1                      
+  88   1          count=(count+1);     //0.125ms次数加1      
+  89   1          count=count%160;     //次数始终保持为40 即保持周期为20ms
+  90   1                      
+  91   1            
+  92   1      }
+  93          
+  94          void Com_Init() interrupt 4
+  95          {
+  96   1              RI=0;       //读标志清零
+  97   1              temp=SBUF;  //将接收到的数据给temp
+  98   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    400    ----
+   CODE SIZE        =    397    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----
