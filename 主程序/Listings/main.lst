@@ -1,4 +1,4 @@
-C51 COMPILER V9.57.0.0   MAIN                                                              05/09/2021 13:06:39 PAGE 1   
+C51 COMPILER V9.57.0.0   MAIN                                                              05/16/2021 16:47:02 PAGE 1   
 
 
 C51 COMPILER V9.57.0.0, COMPILATION OF MODULE MAIN
@@ -9,109 +9,130 @@ COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE 
 line level    source
 
    1          #include<reg52.h>
-   2          #include<CarInit.h>
-   3          #include<Delay.h>
-   4          #include<BluetoothInit.h>
-   5          #define uchar unsigned char
-   6          #define uint unsigned int
+   2          #include<Car_Init.h>
+   3          #include<Com_Init.h>
+   4          #define uchar unsigned char
+   5          #define uint unsigned int
+   6                  
    7          //PWM输出(控制舵机)
-   8          sbit PWM1 =P3^3;
-   9          sbit PWM2 =P3^4;
+   8          sbit SEH_PWM =P3^3;
+   9          sbit SEV_PWM =P3^4;
   10          
-  11          
-  12          uchar temp;            //temp储存蓝牙串口收到的信息
-  13          uchar count;           //0.125ms次数标识（分成20份）
-  14          uchar jd1,jd2;         //舵机角度标识
+  11          uchar temp;            //temp储存蓝牙串口收到的信息
+  12          uchar count=0;           //0.5ms次数标识
+  13          uchar SEH_count=15;
+  14          uchar SEV_count=15;         //舵机角度标识
   15          
   16          void main()
   17          {
-  18   1              jd1=0;
-  19   1              jd2=0;
-  20   1              count=0;
-  21   1              Init();
-  22   1              BluetoothInit();
-  23   1           while(1)
-  24   1             {
-  25   2                      switch(temp)
-  26   2                              {
-  27   3                                              case 0x00: stop(); break; 
-  28   3                                              case 0x01: go(); break;
-  29   3                                              case 0x02: back(); break;
-  30   3                                              case 0x03: left(); break;
-  31   3                                              case 0x04: right(); break;  
-  32   3                                              case 0x05:                              //支架
-  33   3                                                          temp=0;
-  34   3                                                              jd1+=5;
-  35   3                                                              count=0;
-  36   3                                                              if(jd1==20)
-  37   3                                                                      {
-  38   4                                                                              delay(200);
-  39   4                                                                              jd1=19;
-  40   4                                                                      }                                                                       
-  41   3                                   break;
-  42   3                                              case 0x06:                                            
-  43   3                                                              temp=0;
-  44   3                                                              jd1-=5;
-  45   3                                                              count=0;
-  46   3                                                              if(jd1==0)
-  47   3                                                                              jd1=1; break;
-  48   3                                              case 0x07:                           //爪子             
-  49   3                                                              jd2++;
-  50   3                                                              count=0;
-  51   3                                                              temp=0;
-  52   3                                                              if(jd2==6)
-  53   3                                                                               jd2=5; break;
-  54   3                                              case 0x08:        
-C51 COMPILER V9.57.0.0   MAIN                                                              05/09/2021 13:06:39 PAGE 2   
+  18   1              Car_Init();
+  19   1              Com_Init();
+  20   1            while(1);
+  21   1      }
+  22          
+  23          void Timer0_Int() interrupt 1     //定时器0工作方式1 16位定时计数（PWM）
+  24          {
+  25   1              TH0  = 0xff;            
+  26   1              TL0  = 0xa4;
+  27   1                      //舵机1
+  28   1                      if(count <= SEH_count) //控制占空比左右
+  29   1                              {
+  30   2                                      SEH_PWM = 1;//如果count的计数小于（5-25）也就是0.5ms-2.5ms则这段小t周期持续高电平。产生方波
+  31   2                              }
+  32   1                      else
+  33   1                              {
+  34   2                                      SEH_PWM = 0;
+  35   2                              }
+  36   1                      //舵机2
+  37   1                      if(count <= SEV_count) //控制占空比上下
+  38   1                              {
+  39   2                                      SEV_PWM = 1;
+  40   2                              }
+  41   1                      else
+  42   1                              {
+  43   2                                      SEV_PWM = 0;
+  44   2                              }
+  45   1                      count++;
+  46   1                      if (count >= 200) //T = 20ms则定时器计数变量清0
+  47   1                              {
+  48   2                                      count = 0;
+  49   2                              }
+  50   1      }
+  51          
+  52          void uart_ser() interrupt 4
+  53          {
+  54   1           if (RI == 0)
+C51 COMPILER V9.57.0.0   MAIN                                                              05/16/2021 16:47:02 PAGE 2   
 
-  55   3                                                              temp=0;
-  56   3                                                              jd2--;
-  57   3                                                              count=0;
-  58   3                                                              if(jd2==0)
-  59   3                                                                              jd2=1; break;
-  60   3                              }
-  61   2      
-  62   2      
-  63   2            }
-  64   1      }
-  65          
-  66          void Timer0_Int() interrupt 1    //定时器0工作方式1 16位定时计数（PWM）
-  67          {
-  68   1              TH0  = 0xff;            
-  69   1              TL0  = 0x8c;             //0.125ms产生一次中断
-  70   1      
-  71   1          if(count<jd1)                //判断0.125ms次数是否小于角度标识
-  72   1                      {
-  73   2                        PWM1=1;                //确实小于，PWM输出高电平   
-  74   2                      }               
-  75   1              else
-  76   1                      {
-  77   2                        PWM1=0;                //大于则输出低电平
-  78   2                      }
-  79   1              if(count<jd2)
-  80   1                  {
-  81   2                        PWM2=1;
-  82   2                  }
-  83   1              else
-  84   1                      {
-  85   2                        PWM2=0;
-  86   2                      }
-  87   1                      
-  88   1          count=(count+1);     //0.125ms次数加1      
-  89   1          count=count%160;     //次数始终保持为40 即保持周期为20ms
-  90   1                      
-  91   1            
-  92   1      }
-  93          
-  94          void Com_Init() interrupt 4
-  95          {
-  96   1              RI=0;       //读标志清零
-  97   1              temp=SBUF;  //将接收到的数据给temp
-  98   1      }
+  55   1                      {
+  56   2                              return;
+  57   2                      }
+  58   1           ES = 0;
+  59   1           RI = 0;
+  60   1           temp = SBUF; //将接收到的数据传给command
+  61   1               switch(temp)
+  62   1                                      {
+  63   2                                              case 0x00: stop(); break; 
+  64   2                                              case 0x01: go(); break;
+  65   2                                              case 0x02: back(); break;
+  66   2                                              case 0x03: left(); break;
+  67   2                                              case 0x04: right(); break;
+  68   2                                              case 0x05://舵机向上转
+  69   2                                                      {
+  70   3                                                              SEV_count++;
+  71   3                                                              if(SEV_count >= 25)
+  72   3                                                                      {
+  73   4                                                                              SEV_count = 25;//保持180度
+  74   4                                                                      }
+  75   3                                                              count = 0; //占空比参数t改变，让定时器重新计数
+  76   3                                                              break;
+  77   3                                                      }   
+  78   2                                              case 0x06://舵机下降
+  79   2                                                      {
+  80   3                                                              SEV_count--;
+  81   3                                                              if(SEV_count <= 5)
+  82   3                                                                      {
+  83   4                                                                              SEV_count = 5; //保持0度
+  84   4                                                                      }
+  85   3                                                              count = 0;
+  86   3                                                              break;
+  87   3                                                      }   
+  88   2                                              case 0x07://开
+  89   2                                                      {
+  90   3                                                              SEH_count++;
+  91   3                                                              if(SEH_count >= 15)
+  92   3                                                                      {
+  93   4                                                                              SEH_count = 15; //保持90度 
+  94   4                                                                      }
+  95   3                                                              count = 0;
+  96   3                                                              break;
+  97   3                                                      }   
+  98   2                                              case 0x08://合
+  99   2                                                      {
+ 100   3                                                              SEH_count--;
+ 101   3                                                              if(SEH_count <= 5) //保持0度
+ 102   3                                                                      {
+ 103   4                                                                              SEH_count = 5;
+ 104   4                                                                      }
+ 105   3                                                              count = 0;
+ 106   3                                                              break;
+ 107   3                                                      }
+ 108   2                                              case 0x09:  //舵机复位
+ 109   2                                                      {
+ 110   3                                                              SEH_count = 15;
+ 111   3                                                              SEV_count = 15;
+ 112   3                                                              count = 0;
+ 113   3                                                              break;
+ 114   3                                                      }
+ 115   2                                              }
+ 116   1          ES = 1; //打开串口
+C51 COMPILER V9.57.0.0   MAIN                                                              05/16/2021 16:47:02 PAGE 3   
+
+ 117   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    397    ----
+   CODE SIZE        =    373    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----

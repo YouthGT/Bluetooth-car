@@ -199,8 +199,8 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>.\CarInit.h</PathWithFileName>
-      <FilenameWithoutPath>CarInit.h</FilenameWithoutPath>
+      <PathWithFileName>.\Car_Init.h</PathWithFileName>
+      <FilenameWithoutPath>Car_Init.h</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>
@@ -211,20 +211,8 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>.\Delay.h</PathWithFileName>
-      <FilenameWithoutPath>Delay.h</FilenameWithoutPath>
-      <RteFlg>0</RteFlg>
-      <bShared>0</bShared>
-    </File>
-    <File>
-      <GroupNumber>1</GroupNumber>
-      <FileNumber>4</FileNumber>
-      <FileType>5</FileType>
-      <tvExp>0</tvExp>
-      <tvExpOptDlg>0</tvExpOptDlg>
-      <bDave2>0</bDave2>
-      <PathWithFileName>.\BluetoothInit.h</PathWithFileName>
-      <FilenameWithoutPath>BluetoothInit.h</FilenameWithoutPath>
+      <PathWithFileName>.\Com_Init.h</PathWithFileName>
+      <FilenameWithoutPath>Com_Init.h</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>

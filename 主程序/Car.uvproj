@@ -370,19 +370,14 @@
               <FilePath>.\main.c</FilePath>
             </File>
             <File>
-              <FileName>CarInit.h</FileName>
+              <FileName>Car_Init.h</FileName>
               <FileType>5</FileType>
-              <FilePath>.\CarInit.h</FilePath>
+              <FilePath>.\Car_Init.h</FilePath>
             </File>
             <File>
-              <FileName>Delay.h</FileName>
+              <FileName>Com_Init.h</FileName>
               <FileType>5</FileType>
-              <FilePath>.\Delay.h</FilePath>
-            </File>
-            <File>
-              <FileName>BluetoothInit.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\BluetoothInit.h</FilePath>
+              <FilePath>.\Com_Init.h</FilePath>
             </File>
           </Files>
         </Group>
