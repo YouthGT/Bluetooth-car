@@ -247,7 +247,7 @@ void main()
                                 jd1++;
                                 count=0;
                                 tmp=0;
-                                if(jd1==15)
+                                if(j1==15)
                                 jd2=3;                       
                                 if(jd1==18)
                                         {

@@ -1,296 +1,112 @@
-#include<reg52.h>
-#define uchar unsigned char
-#define uint unsigned int
-/*位定义*/
-//前轮
-sbit left_go=P1^2;
-sbit left_back=P1^3;
-sbit right_go=P1^0;
-sbit right_back=P1^1;
-//后轮
-sbit left_go2=P1^6;
-sbit left_back2=P1^7;
-sbit right_go2=P1^4;
-sbit right_back2=P1^5;
-//车轮控制使能段
-sbit ENA1=P2^0;
-sbit ENB1=P2^3;
-sbit ENA2=P2^0;
-sbit ENB2=P2^3;
-//PWM输出(控制舵机)
-sbit pwm1 =P3^3;
-sbit pwm2 =P3^4;
-sbit pwm3 =P3^5;
-sbit pwm4 =P3^6;
-uchar temp;             //temp储存蓝牙串口收到的信息
-uchar count,num1;      //0.5ms次数标识
-uchar jd1,jd2;         //舵机角度标识
-void delay(uint z);    //声明延时函数
-void BlueteethInit();  //声明蓝牙初始化
-void init();           //声明车状态初始化
-//声明车的前进、后退、左右转函数
-void go();
-void back();
-void left();
-void right();
-void stop();
-
-//主函数
+#include <reg52.h>
+sbit  PWM01= P2^0;
+sbit  PWM02= P3^4;
+unsigned char count1=5;
+unsigned char count2=5;
+unsigned char count=0;
+unsigned char RxdByte = 0;  //串口接收到的字节
+void ConfigTimer0();
+void ConfigUART0(unsigned int baud);
+ 
+void PWM1(unsigned char x)
+{
+	count1=x;
+}
+void PWM2(unsigned char x)
+{
+	count2=x;
+}
+ 
 void main()
 {
-	jd1=0;
-	jd2=0;
-	count=0;
-	init();
-	BlueteethInit();
-  while(1)
-	{
-			switch(temp)
-			{
-		   
-					case 0x01: go(); break;
-					case 0x02: back(); break;
-					case 0x03: left(); break;
-					case 0x04: right(); break;
-					case 0x00: stop(); break;   
-//爪子舵机
-					case 0x05:                                            
-							jd1++;
-							count=0;
-							temp=0;
-							if(jd1==15)
-							 jd2=3;                       
-							if(jd1==18)
-								{
-									jd1=17;
-									delay(200);
-									jd2=15;                          
-								}
-								break;
-					case 0x06:                                            
-							temp=0;
-							jd1--;
-							count=0;
-							if(jd1==0)
-									jd1=1; break; 
-//上升舵机
-                    case 0x07:                                   
-							jd2++;
-							count=0;
-							temp=0;
-							if(jd2==6)
-									 jd2=5; break;
-					case 0x08:        
-							temp=0;
-							jd2--;
-							count=0;
-							if(jd2==0)
-									jd2=1; break;		
-                }
-        }
+    EA = 1;       //总中断
+    ConfigTimer0();   //配置T0定时1ms
+    ConfigUART0(9600);  //配置波特率为9600
+    
+    while (1)
+    {  
+					switch(RxdByte)
+				{
+					case 0x01:PWM1(5);break;//PWM1(5)手机向单片机发送‘0’，舵机转到0度
+					case 0x02:PWM1(10);break;
+					case 0x03:PWM1(15);break;//90
+					case 0x04:PWM1(20);break;//135
+					case 0x05:PWM1(25);break;//180
+                    case 0x06:PWM2(5);break;//PWM1(5)手机向单片机发送‘0’，舵机转到0度
+					case 0x07:PWM2(10);break;
+					case 0x08:PWM2(15);break;
+					case 0x09:PWM2(20);break;
+					case 0x10:PWM2(25);break;
+				}
 }
-/*延时函数*/
-void delay(uint z)        
-{
-        uint x,y;
-        for(x=z;x>0;x--)
-                for(y=110;y>0;y--);
-}
-/*蓝牙中断初始化（定时器1）*/
-void BlueteethInit()        
-{
-        TMOD= 0x21;        //T1工作模式为2，自动重装
-        TH1 = 0xfd;        //设置波特率为9600
-        TL1 = 0xfd;
-        TH0= 0xff;         //0.5ms
-        TL0=0x8c;            //0.25ms         //0.125ms
-        ET0=1;               
-        TR0=1;
-        TR1= 1;      
-        REN= 1;
-        SM0= 0;
-        SM1= 1;   
-        ES= 1;         //串口中断允许位
-        EA=1;         //终端控制允许
 }
 
-/*车状态初始化*/
-void init()
+/* 配置并启动T0，ms-T0定时时间 */
+void ConfigTimer0()
 {
-        right_back=0;
-        left_go=0;
-        left_back=0;
-        right_go=0;
-
-        right_back2=0;
-        left_go2=0;
-        left_back2=0;
-        right_go2=0;
-//        jd1=1;
-//   jd2=1;         
-//        num=0;
+    TMOD &= 0xF0;   //清零T0的控制位
+    TMOD |= 0x01;   //配置T0为模式1
+    TH0 = 0xff;     //加载T0重载值的高字节
+    TL0 = 0xa3 ;    //加载T0重载值的低字节
+    ET0 = 1;        //使能T0中断
+    TR0 = 1;        //启动T0
 }
-/*前进*/
-void go()
+/* 串口配置函数，通信波特率 */
+void ConfigUART0(unsigned int baud)
 {
-	ENA1=1;
-	ENB1=1;
-	ENA2=1;
-	ENB2=1;
+    SCON  = 0x50;  //配置串口为模式1
+    TMOD &= 0x0F;  //清零T1的控制位
+    TMOD |= 0x20;  //配置T1为模式2
+    TH1 = 256 - (11059200/12/32)/baud;  //计算T1重载值
+    TL1 = TH1;     //初值等于重载值
+    ET1 = 0;       //禁止T1中断
+    ES  = 1;       //使能串口中断
+    TR1 = 1;       //启动T1
+}
+ 
+/* T0中断服务函数，完成扫描 */
+void InterruptTimer0() interrupt 1
+{
+    TH0 = 0xff ;  //重新加载重载值
+    TL0 = 0xa3;
+	  if(count <= count1) 
+    {
+     
+        PWM01 = 1;
+    }
+    else
+    {
+        PWM01 = 0;
+    }
+    count++;
+     if(count <= count2) 
+    {
+     
+        PWM02 = 1;
+    }
+    else
+    {
+        PWM02 = 0;
+    }
+    if (count >= 200) 
+    {
+        count = 0;
+			
+    }
 	
-//	left_go=1;
-//	left_back=0;
-//	right_go=1;
-//	right_back=0;
-
-//	left_go2=1;
-//	left_back2=0;
-//	right_go2=1;
-//	right_back2=0; 
-
-//test	
-	left_go=0;
-	left_back=0;
-	right_go=0;
-	right_back=0;
-
-	left_go2=0;
-	left_back2=0;
-	right_go2=0;
-	right_back2=0;	
 }
-/*后退*/
-void back()
+/* UART中断服务函数 */
+void InterruptUART0() interrupt 4
 {
-	ENA1=1;
-	ENB1=1;
-	ENA2=1;
-	ENB2=1;
-	
-	left_go=0;
-//	left_back=1;
-//	right_go=0;
-//	right_back=1;
-
-//	left_go2=0;
-//	left_back2=1;
-//	right_go2=0;
-//	right_back2=1; 
-
-//test	
-	left_go=0;
-	left_back=0;
-	right_go=0;
-	right_back=0;
-
-	left_go2=0;
-	left_back2=0;
-	right_go2=0;
-	right_back2=0;	
-}
-/*左转*/
-void left()
-{
-	ENA1=1;
-	ENB1=1;
-	ENA2=1;
-	ENB2=1;
-
-//	left_go=0;
-//	left_back=1;
-//	right_go=1;
-//	right_back=0;
-
-//	left_go2=1;
-//	left_back2=0;
-//	right_go2=1;
-//	right_back2=0;
-	
-//test	
-	left_go=0;
-	left_back=0;
-	right_go=0;
-	right_back=0;
-
-	left_go2=0;
-	left_back2=0;
-	right_go2=0;
-	right_back2=0;		
-}
-/*右转*/
-void right()
-{
-	ENA1=1;
-	ENB1=1;
-	ENA2=1;
-	ENB2=1;
-	
-//	left_go=1;
-//	left_back=0;
-//	right_go=0;
-//	right_back=1;
-
-//	
-//	left_go2=1;
-//	left_back2=0;
-//	right_go2=1;
-//	right_back2=0;
-	
-//test	
-	left_go=0;
-	left_back=0;
-	right_go=0;
-	right_back=0;
-
-	left_go2=0;
-	left_back2=0;
-	right_go2=0;
-	right_back2=0;
-}
-/*停止*/
-void stop()
-{   
-	left_go=0;
-	left_back=0;
-	right_go=0;
-	right_back=0;
-
-	left_go2=0;
-	left_back2=0;
-	right_go2=0;
-	right_back2=0;
-}
-/*定时器0工作方式1 16位定时计数（PWM）*/
-void time0() interrupt 1    
-{
-        TH0  = 0xff;            
-        TL0  = 0x8c;
-
-    if(count<jd1)              //判断0.5ms次数是否小于角度标识
-		{
-		  pwm1=1;                //确实小于，PWM输出高电平   
-		}		
-	else
-		{
-		  pwm1=0;                                 //大于则输出低电平
-		}
-	if(count<jd2)
-	    {
-	 	  pwm2=1;
-	    }
-	else
-		{
-		  pwm2=0;
-		}
-		
-    count=(count+1);     //0.5ms次数加1      
-    count=count%160;     //次数始终保持为40 即保持周期为20ms
-                
-      
-}
-/*串口中断*/
-void Com_Int() interrupt 4
-{
-        RI=0;       //读标志清零
-        temp=SBUF;
+    if (RI)  //接收到字节
+    {
+        RI = 0;  //手动清零接收中断标志位
+        RxdByte = SBUF;  //接收到的数据保存到接收字节变量中
+        SBUF = RxdByte;  //接收到的数据又直接发回，叫作-"echo"，
+                         //用以提示用户输入的信息是否已正确接收
+    }
+    if (TI)  //字节发送完毕
+    {
+        TI = 0;  //手动清零发送中断标志位
+    }
 }
