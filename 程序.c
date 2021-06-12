@@ -1,4 +1,5 @@
 #include<reg52.h>
+#test
 #define uchar unsigned char
 #define uint unsigned int
 uint i,j;
