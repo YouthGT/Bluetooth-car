@@ -3,7 +3,6 @@
 #include<Com_Init.h>
 #define uchar unsigned char
 #define uint unsigned int
-	
 //PWMÊä³ö(¿ØÖÆ¶æ»ú)
 sbit SEV_PWM =P2^0;
 sbit SEH_PWM =P3^3;
